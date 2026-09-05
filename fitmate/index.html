@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitMate 2.0 - Social Fitness & Recovery Platform</title>
+  <meta name="description" content="Apple-designed social fitness app for workout partners to sync workouts, track muscle soreness, share nutrition, and schedule gym meetup times in real time.">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-container">
+      <a href="#" class="logo-group">
+        <div class="logo-icon"></div>
+        <div>
+          <div class="logo-text">FitMate</div>
+        </div>
+        <span class="logo-badge">REST API 2.0</span>
+      </a>
+
+      <!-- Connected Partner Selector -->
+      <div class="header-center">
+        <div id="partner-selector-container" class="segmented-control">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Active User Profile Pill -->
+        <div style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-pill); padding: 4px 10px; border-radius: 20px;">
+          <div class="user-avatar" id="user-active-avatar">A</div>
+          <span id="user-active-name" style="font-size: 0.85rem; font-weight: 700;">@username</span>
+        </div>
+
+        <!-- Pending Partner Requests Button -->
+        <button class="btn btn-secondary btn-icon" title="Pending Partner Requests" onclick="window.FitApp.openPendingRequestsModal()">
+          👥
+          <span class="notification-badge" id="pending-requests-badge" style="display: none;">0</span>
+        </button>
+
+        <button class="btn btn-primary" onclick="window.FitApp.openRendezvousModal()">
+          ⏰ Schedule Gym
+        </button>
+
+        <button class="btn btn-secondary" id="btn-add-partner-header" style="font-size: 0.8rem; padding: 0.45rem 0.75rem;" onclick="window.FitApp.openAddPartnerModal()">
+          + Add Partner
+        </button>
+
+        <button class="btn btn-secondary" style="padding: 0.45rem 0.75rem; font-size: 0.8rem;" onclick="window.FitAuth.handleLogout()">
+          Sign Out
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="nav-tabs">
+    <button class="nav-tab active" data-tab="partner-workout" onclick="window.FitApp.switchTab('partner-workout')">
+      🏋️ Partner Workout Sync
+    </button>
+    <button class="nav-tab" data-tab="soreness-map" onclick="window.FitApp.switchTab('soreness-map')">
+      💪 Muscle Soreness Map
+    </button>
+    <button class="nav-tab" data-tab="personal-tracker" onclick="window.FitApp.switchTab('personal-tracker')">
+      📈 Personal Progress
+    </button>
+    <button class="nav-tab" data-tab="group-nutrition" onclick="window.FitApp.switchTab('group-nutrition')">
+      🥗 Group & Recovery Feed
+    </button>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="main-container">
+
+    <!-- Rest Timer Hero Banner -->
+    <div id="rest-timer-banner" class="rendezvous-banner" style="display: none; background: rgba(52, 199, 89, 0.08); border-color: rgba(52, 199, 89, 0.3);">
+      <div class="rendezvous-info">
+        <div class="time-pulse-badge" style="border-color: var(--apple-green); color: var(--apple-green);">
+          ⏱️
+        </div>
+        <div>
+          <div class="rendezvous-title" style="color: #1e7032;">Rest Timer Active</div>
+          <div class="rendezvous-meta">Catch your breath before your next set!</div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <span id="rest-timer-display" style="font-size: 2.2rem; font-weight: 800; color: var(--apple-green);">1:30</span>
+        <button class="btn btn-secondary" onclick="window.FitWorkout.stopRestTimer()">Skip Rest</button>
+      </div>
+    </div>
+
+    <!-- TAB 1: Shared Partner Workout Sync -->
+    <div class="tab-content active" id="tab-partner-workout">
+      
+      <!-- Gym Rendezvous Hero Bar -->
+      <div class="rendezvous-banner">
+        <div class="rendezvous-info">
+          <div class="time-pulse-badge">⏰</div>
+          <div>
+            <div class="rendezvous-title" id="rendezvous-time-text">Today at 5:30 PM</div>
+            <div class="rendezvous-meta">
+              <span id="rendezvous-split-text" style="font-weight: 700; color: var(--text-main);">Push Day A (Chest, Shoulders & Triceps)</span>
+              <span id="partner-status-badge" class="status-chip status-enroute">● Solo Mode</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="btn btn-secondary" style="font-size: 0.8rem;" onclick="window.FitStorage.updateRendezvous('17:30', 'Push Day A', ''); window.FitApp.showToast('✓ Confirmed', 'Status updated to Confirmed');">✓ Confirmed</button>
+          <button class="btn btn-primary" style="font-size: 0.8rem;" onclick="window.FitApp.openRendezvousModal()">Change Time</button>
+        </div>
+      </div>
+
+      <!-- Workout Exercises Section -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">
+              <span>💪 Today's Workout Session</span>
+              <span class="logo-badge" style="background: rgba(52, 199, 89, 0.12); color: #278a3f; border-color: rgba(52, 199, 89, 0.3);">REST API Synced</span>
+            </div>
+            <div class="card-subtitle">Log your weight and reps set-by-set. Synced in real-time with connected partners.</div>
+          </div>
+
+          <!-- Add Custom Exercise Button -->
+          <button class="btn btn-green" onclick="window.FitApp.openModal('modal-add-exercise')">
+            + Add Custom Exercise
+          </button>
+        </div>
+
+        <div id="todays-exercises-container">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: Interactive Muscle Soreness Body Map -->
+    <div class="tab-content" id="tab-soreness-map">
+      <div class="grid-body-workout">
+        
+        <!-- SVG Body Map Container -->
+        <div class="body-map-container">
+          <div class="card-title" style="width: 100%; text-align: center; justify-content: center; margin-bottom: 0.2rem;">
+            Anatomical Muscle Soreness
+          </div>
+          <div class="card-subtitle" style="margin-bottom: 1rem; text-align: center;">
+            Click any muscle group on the SVG body map to set your recovery score
+          </div>
+
+          <div class="body-svg-wrapper">
+            <div class="body-svg-box">
+              <div class="body-svg-label">Front View</div>
+              <div id="front-body-map-container" style="width: 100%;"></div>
+            </div>
+            <div class="body-svg-box">
+              <div class="body-svg-label">Back View</div>
+              <div id="back-body-map-container" style="width: 100%;"></div>
+            </div>
+          </div>
+
+          <!-- Soreness Legend -->
+          <div class="soreness-legend">
+            <div class="legend-item"><span class="legend-dot dot-fresh"></span> Fresh (0-25%)</div>
+            <div class="legend-item"><span class="legend-dot dot-recovered"></span> Recovered (26-50%)</div>
+            <div class="legend-item"><span class="legend-dot dot-sore"></span> Sore (51-75%)</div>
+            <div class="legend-item"><span class="legend-dot dot-verysore"></span> Very Sore (76-100%)</div>
+          </div>
+        </div>
+
+        <!-- Soreness Analysis & Advisory -->
+        <div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">💡 Smart Workout Advisory</div>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.88rem;">
+              FitMate automatically compares muscle soreness between both connected partners to recommend safe daily workout splits.
+            </p>
+
+            <div id="smart-split-advisory-box" class="split-advisory">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB 3: Personal Progress Tracker -->
+    <div class="tab-content" id="tab-personal-tracker">
+      <div class="grid-3" style="margin-bottom: 1.5rem;">
+        <div class="card">
+          <div class="card-subtitle">User Metrics</div>
+          <div id="user-height-weight-display" style="font-size: 1.5rem; font-weight: 800; color: var(--apple-blue); margin-top: 0.25rem;">
+            178 cm • 75 kg
+          </div>
+          <div style="font-size: 0.8rem; color: var(--apple-green); margin-top: 0.25rem;">Height & Body Weight</div>
+        </div>
+
+        <div class="card">
+          <div class="card-subtitle">Completed Workouts</div>
+          <div style="font-size: 2rem; font-weight: 800; color: var(--apple-green); margin-top: 0.25rem;">
+            18 Sessions
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Logged Sessions</div>
+        </div>
+
+        <div class="card">
+          <div class="card-subtitle">Current Bench Press PR</div>
+          <div style="font-size: 2rem; font-weight: 800; color: var(--apple-purple); margin-top: 0.25rem;">
+            225 lbs x 5
+          </div>
+          <div style="font-size: 0.8rem; color: var(--apple-blue); margin-top: 0.25rem;">Personal Record</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: Group & Personal Nutrition Feed -->
+    <div class="tab-content" id="tab-group-nutrition">
+      
+      <!-- Macro Bar Header -->
+      <div class="macro-stat-grid">
+        <div class="macro-card">
+          <div class="macro-card-title">Calories</div>
+          <div class="macro-value" id="stat-calories">0 / 2,800 kcal</div>
+          <div class="macro-progress-bar"><div class="macro-fill fill-calories"></div></div>
+        </div>
+
+        <div class="macro-card">
+          <div class="macro-card-title">Protein</div>
+          <div class="macro-value" id="stat-protein">0g / 180g</div>
+          <div class="macro-progress-bar"><div class="macro-fill fill-protein"></div></div>
+        </div>
+
+        <div class="macro-card">
+          <div class="macro-card-title">Carbs</div>
+          <div class="macro-value" id="stat-carbs">0g / 280g</div>
+          <div class="macro-progress-bar"><div class="macro-fill fill-carbs"></div></div>
+        </div>
+
+        <div class="macro-card">
+          <div class="macro-card-title">Hydration & Sleep</div>
+          <div class="macro-value" id="stat-water">0 ml</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">Sleep: <span id="stat-sleep" style="color: var(--apple-green); font-weight: 700;">8.0 hrs</span></div>
+        </div>
+      </div>
+
+      <!-- Quick Logging Buttons -->
+      <div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+        <button class="btn btn-primary" onclick="window.FitApp.openModal('modal-meal')">
+          🥗 Log Meal to Feed
+        </button>
+        <button class="btn btn-secondary" onclick="window.FitApp.addQuickWater(250)">
+          💧 +250ml Water
+        </button>
+        <button class="btn btn-secondary" onclick="window.FitApp.addQuickWater(500)">
+          💧 +500ml Water
+        </button>
+      </div>
+
+      <!-- Shared Group Feed -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">👥 Group Nutrition & Recovery Feed</div>
+            <div class="card-subtitle">Partners see each other's fueling and hydration in real-time.</div>
+          </div>
+        </div>
+
+        <div id="group-nutrition-feed" class="feed-list">
+          <!-- Dynamically rendered -->
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODALS -->
+
+  <!-- Modal: ADD CUSTOM EXERCISE -->
+  <div class="modal-backdrop" id="modal-add-exercise">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">🏋️ Add Custom Exercise</div>
+        <button class="close-btn" onclick="window.FitApp.closeModal('modal-add-exercise')">&times;</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Exercise Name</label>
+        <input type="text" class="form-control" id="ex-name-input" placeholder="e.g. Incline Dumbbell Flyes" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Target Muscle Group</label>
+        <select class="form-control" id="ex-group-select">
+          <option value="Chest">Chest</option>
+          <option value="Shoulders">Shoulders</option>
+          <option value="Biceps">Biceps</option>
+          <option value="Triceps">Triceps</option>
+          <option value="Quads">Quads</option>
+          <option value="Hamstrings">Hamstrings</option>
+          <option value="Lats">Lats</option>
+          <option value="Abs">Abs</option>
+          <option value="Back">Back</option>
+        </select>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
+        <div class="form-group">
+          <label class="form-label">Total Sets</label>
+          <input type="number" class="form-control" id="ex-sets-input" value="4">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Reps / Set</label>
+          <input type="number" class="form-control" id="ex-reps-input" value="10">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Weight (lbs)</label>
+          <input type="number" class="form-control" id="ex-weight-input" value="65">
+        </div>
+      </div>
+
+      <button class="btn btn-green" style="width: 100%; margin-top: 0.5rem;" onclick="window.FitApp.saveCustomExercise()">
+        Add to Workout Plan 💪
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal 1: AUTH LOGIN -->
+  <div class="modal-backdrop" id="modal-auth-login">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">🍏 Sign In to FitMate</div>
+      </div>
+
+      <form onsubmit="event.preventDefault(); window.FitAuth.handleLogin(document.getElementById('login-user-input').value, document.getElementById('login-pass-input').value);">
+        <div class="form-group">
+          <label class="form-label">FitMate ID or Email (@username)</label>
+          <input type="text" class="form-control" id="login-user-input" placeholder="e.g. alex_vance" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-control" id="login-pass-input" placeholder="Enter password" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+          Sign In
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 1.25rem; font-size: 0.85rem; color: var(--text-muted);">
+        Don't have an account? 
+        <a href="#" style="color: var(--apple-blue); font-weight: 700;" onclick="window.FitApp.closeModal('modal-auth-login'); window.FitApp.openModal('modal-auth-register');">Register Account Now</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: AUTH REGISTER WITH HEALTH ONBOARDING -->
+  <div class="modal-backdrop" id="modal-auth-register">
+    <div class="modal-card" style="max-width: 540px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header">
+        <div class="modal-title">🎉 Register Account & Health Profile</div>
+        <button class="close-btn" onclick="window.FitApp.closeModal('modal-auth-register')">&times;</button>
+      </div>
+
+      <form onsubmit="event.preventDefault(); window.FitAuth.handleRegister({
+        name: document.getElementById('reg-name-input').value,
+        username: document.getElementById('reg-uname-input').value,
+        email: document.getElementById('reg-email-input').value,
+        password: document.getElementById('reg-pass-input').value,
+        height: document.getElementById('reg-height-input').value,
+        weight: document.getElementById('reg-weight-input').value,
+        targetCalories: document.getElementById('reg-cals-input').value,
+        split: document.getElementById('reg-split-input').value,
+        benchPr: document.getElementById('reg-bench-input').value
+      });">
+        
+        <div style="font-weight: 700; font-size: 0.85rem; color: var(--apple-blue); margin-bottom: 0.75rem; text-transform: uppercase;">1. Account Details</div>
+        
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" class="form-control" id="reg-name-input" placeholder="e.g. Alex Vance" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">FitMate ID (@username)</label>
+          <input type="text" class="form-control" id="reg-uname-input" placeholder="e.g. alex_vance" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" class="form-control" id="reg-email-input" placeholder="alex@fitmate.io" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-control" id="reg-pass-input" placeholder="Create password" required>
+          </div>
+        </div>
+
+        <div style="font-weight: 700; font-size: 0.85rem; color: var(--apple-blue); margin: 1rem 0 0.75rem 0; text-transform: uppercase;">2. Health Metrics & Goals</div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
+          <div class="form-group">
+            <label class="form-label">Height</label>
+            <input type="text" class="form-control" id="reg-height-input" placeholder="178 cm">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Body Weight</label>
+            <input type="text" class="form-control" id="reg-weight-input" placeholder="75 kg">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Target Calories</label>
+            <input type="number" class="form-control" id="reg-cals-input" placeholder="2800 kcal">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Current Workout Split</label>
+          <select class="form-control" id="reg-split-input">
+            <option value="Push Day A (Chest, Shoulders & Triceps)">Push Day A (Chest, Shoulders & Triceps)</option>
+            <option value="Pull Day B (Lats, Upper Back & Biceps)">Pull Day B (Lats, Upper Back & Biceps)</option>
+            <option value="Legs & Core Hypertrophy">Legs & Core Hypertrophy</option>
+            <option value="Upper / Lower Body Split">Upper / Lower Body Split</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Bench Press PR (Optional)</label>
+          <input type="text" class="form-control" id="reg-bench-input" placeholder="e.g. 225 lbs x 5">
+        </div>
+
+        <button type="submit" class="btn btn-green" style="width: 100%; margin-top: 0.5rem;">
+          Register Account & Start Tour 🚀
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 3: INTERACTIVE GUIDED SPOTLIGHT TOUR -->
+  <div id="spotlight-backdrop" class="spotlight-backdrop">
+    <div id="spotlight-target-ring" class="spotlight-target-ring"></div>
+    <div id="spotlight-card" class="spotlight-card">
+      <div style="font-size: 0.75rem; font-weight: 700; color: var(--apple-blue); text-transform: uppercase;" id="spotlight-step-text">Step 1 of 4</div>
+      <div style="font-size: 1.15rem; font-weight: 800; margin-top: 0.2rem;" id="spotlight-title">Guided Tour</div>
+      <div style="font-size: 0.88rem; color: var(--text-muted); margin-top: 0.4rem;" id="spotlight-desc">Explanation text</div>
+      
+      <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;" id="spotlight-next-btn" onclick="window.FitAuth.nextSpotlightStep()">
+        Next →
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal 4: ADD PARTNER -->
+  <div class="modal-backdrop" id="modal-add-partner">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">🔍 Add Workout Partner</div>
+        <button class="close-btn" onclick="window.FitApp.closeModal('modal-add-partner')">&times;</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Search FitMate ID (@username)</label>
+        <input type="text" class="form-control" id="partner-search-input" placeholder="e.g. jordan_lee or sam_fit" oninput="window.FitApp.handlePartnerSearch(this.value)">
+      </div>
+
+      <div id="partner-search-results" style="max-height: 250px; overflow-y: auto; margin-top: 1rem;">
+        <!-- Search results rendered -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 5: PENDING PARTNER REQUESTS -->
+  <div class="modal-backdrop" id="modal-pending-requests">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">📩 Pending Partner Requests</div>
+        <button class="close-btn" onclick="window.FitApp.closeModal('modal-pending-requests')">&times;</button>
+      </div>
+
+      <div id="pending-requests-container" style="max-height: 300px; overflow-y: auto;">
+        <!-- Dynamically rendered -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 6: SCHEDULE GYM MEETUP -->
+  <div class="modal-backdrop" id="modal-rendezvous">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">⏰ Schedule Gym Meetup</div>
+        <button class="close-btn" onclick="window.FitApp.closeModal('modal-rendezvous')">&times;</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Meetup Time</label>
+        <input type="time" class="form-control" id="meetup-time-input" value="17:30">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Target Workout Split</label>
+        <select class="form-control" id="meetup-split-input">
+          <option value="Push Day A (Chest, Shoulders & Triceps)">Push Day A (Chest, Shoulders & Triceps)</option>
+          <option value="Pull Day B (Lats, Upper Back & Biceps)">Pull Day B (Lats, Upper Back & Biceps)</option>
+          <option value="Legs & Core Hypertrophy">Legs & Core Hypertrophy</option>
+        </select>
+      </div>
+
+      <button class="btn btn-primary" style="width: 100%;" onclick="window.FitApp.saveRendezvous()">
+        Broadcast to Connected Partners 🔔
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal 7: SORENESS PICKER -->
+  <div class="modal-backdrop" id="modal-soreness">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title" id="soreness-modal-title">Set Soreness</div>
+        <button class="close-btn" onclick="window.FitApp.closeModal('modal-soreness')">&times;</button>
+      </div>
+
+      <div class="form-group" style="text-align: center; margin: 1.5rem 0;">
+        <div id="soreness-val-display" style="font-size: 2.5rem; font-weight: 800; color: var(--apple-blue);">15%</div>
+        <input type="range" min="0" max="100" step="5" value="15" style="width: 100%; margin-top: 1rem; accent-color: var(--apple-blue);" id="soreness-range-input" oninput="document.getElementById('soreness-val-display').innerText = `${this.value}%`">
+      </div>
+
+      <button class="btn btn-primary" style="width: 100%;" onclick="window.FitApp.saveMuscleSoreness()">
+        Save Soreness Score
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal 8: MEAL LOGGER -->
+  <div class="modal-backdrop" id="modal-meal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">🥗 Log Meal to Group Feed</div>
+        <button class="close-btn" onclick="window.FitApp.closeModal('modal-meal')">&times;</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Meal Category</label>
+        <select class="form-control" id="meal-type-select">
+          <option value="Pre-Workout Meal">Pre-Workout Meal</option>
+          <option value="Post-Workout Shake">Post-Workout Shake</option>
+          <option value="Breakfast">Breakfast</option>
+          <option value="Lunch">Lunch</option>
+          <option value="Dinner">Dinner</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Meal Description</label>
+        <input type="text" class="form-control" id="meal-title-input" placeholder="e.g. Chicken & Rice Power Bowl">
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+        <div class="form-group">
+          <label class="form-label">Calories (kcal)</label>
+          <input type="number" class="form-control" id="meal-cals-input" value="650">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Protein (g)</label>
+          <input type="number" class="form-control" id="meal-prot-input" value="48">
+        </div>
+      </div>
+
+      <button class="btn btn-primary" style="width: 100%;" onclick="window.FitApp.saveMealLog()">
+        Post to Shared Feed 🥗
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="js/api-service.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/partners.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/body-map.js"></script>
+  <script src="js/workout.js"></script>
+  <script src="js/nutrition.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
